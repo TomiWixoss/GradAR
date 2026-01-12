@@ -69,14 +69,27 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
 
     return () => {
       renderer.setAnimationLoop(null);
-      mindar.stop();
+      if (mindarRef.current) {
+        try {
+          mindarRef.current.stop();
+        } catch {
+          // ignore
+        }
+      }
     };
   }, [targetSrc]);
 
   return (
     <div
       ref={containerRef}
-      style={{ width: "100vw", height: "100vh", position: "relative" }}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        overflow: "hidden",
+      }}
     />
   );
 }
