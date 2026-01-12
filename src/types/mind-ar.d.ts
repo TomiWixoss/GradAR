@@ -5,6 +5,10 @@ declare module "mind-ar/dist/mindar-image-three.prod.js" {
     container: HTMLElement;
     imageTargetSrc: string;
     maxTrack?: number;
+    filterMinCF?: number;
+    filterBeta?: number;
+    warmupTolerance?: number;
+    missTolerance?: number;
     uiLoading?: string;
     uiScanning?: string;
     uiError?: string;

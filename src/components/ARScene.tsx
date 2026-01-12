@@ -16,6 +16,13 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const mindar = new MindARThree({
       container: containerRef.current,
       imageTargetSrc: targetSrc,
+      filterMinCF: 0.0001,
+      filterBeta: 0.001,
+      warmupTolerance: 3,
+      missTolerance: 10,
+      uiLoading: "no",
+      uiScanning: "no",
+      uiError: "no",
     });
     mindarRef.current = mindar;
 
