@@ -9,6 +9,7 @@ export class GraduationCap {
   private throwProgress = 0;
   private initialY = 0;
   private initialPosition = new THREE.Vector3();
+  private baseRotation = new THREE.Euler();
 
   constructor() {
     this.group = new THREE.Group();
@@ -25,9 +26,16 @@ export class GraduationCap {
         "/models/graduation_cap_with_textures.glb",
         (gltf) => {
           this.cap = gltf.scene;
-          this.cap.scale.setScalar(0.06); // Nhỏ hơn
+          this.cap.scale.setScalar(0.06);
+
+          // Rotation để mũ nằm đúng hướng (mặt phẳng song song với bằng)
+          this.cap.rotation.x = 0;
+          this.cap.rotation.y = 0;
+          this.cap.rotation.z = 0;
+          this.baseRotation.copy(this.cap.rotation);
+
           this.cap.position.copy(position);
-          this.cap.position.y = position.y - 0.1;
+          this.cap.position.z = 0.05; // Nổi lên trên bằng một chút
           this.initialY = this.cap.position.y;
           this.initialPosition.copy(this.cap.position);
           this.group.add(this.cap);
@@ -42,9 +50,8 @@ export class GraduationCap {
     });
   }
 
-  // Ném mũ lên trời
   throwCap() {
-    if (this.cap) {
+    if (this.cap && !this.isThrown) {
       this.isThrown = true;
       this.throwProgress = 0;
     }
@@ -56,35 +63,30 @@ export class GraduationCap {
     this.animationTime += deltaTime;
 
     if (this.isThrown) {
-      this.throwProgress += deltaTime * 1.2;
+      this.throwProgress += deltaTime * 1.5;
 
       if (this.throwProgress < 1) {
-        // Bay lên
-        const height = Math.sin(this.throwProgress * Math.PI) * 0.4;
-        this.cap.position.y = this.initialY + height;
-        this.cap.rotation.z += deltaTime * 10;
-        this.cap.rotation.x += deltaTime * 5;
-      } else if (this.throwProgress < 1.8) {
-        // Rơi xuống về vị trí ban đầu
-        const fallProgress = (this.throwProgress - 1) / 0.8;
-        const height = (1 - fallProgress) * 0.15;
-        this.cap.position.y = this.initialY + height;
-        this.cap.position.x =
-          this.initialPosition.x + (1 - fallProgress) * 0.05;
-        this.cap.rotation.z *= 0.95;
-        this.cap.rotation.x *= 0.95;
+        // Bay lên (theo trục Z của neo = vuông góc với mặt bằng)
+        const height = Math.sin(this.throwProgress * Math.PI) * 0.3;
+        this.cap.position.z = 0.05 + height;
+        // Xoay nhẹ khi bay
+        this.cap.rotation.z = this.throwProgress * Math.PI * 4;
+      } else if (this.throwProgress < 1.5) {
+        // Rơi xuống
+        const fallProgress = (this.throwProgress - 1) / 0.5;
+        const height = (1 - fallProgress) * 0.1;
+        this.cap.position.z = 0.05 + height;
+        this.cap.rotation.z *= 0.9;
       } else {
-        // Đã rơi xong, reset
+        // Reset
         this.isThrown = false;
         this.cap.position.copy(this.initialPosition);
-        this.cap.position.y = this.initialY;
-        this.cap.rotation.set(0, 0, 0);
+        this.cap.position.z = 0.05;
+        this.cap.rotation.copy(this.baseRotation);
       }
     } else {
-      // Idle - lơ lửng nhẹ và xoay
-      this.cap.position.y =
-        this.initialY + Math.sin(this.animationTime * 2) * 0.01;
-      this.cap.rotation.y += deltaTime * 0.8;
+      // Idle - chỉ lơ lửng nhẹ, KHÔNG xoay
+      this.cap.position.z = 0.05 + Math.sin(this.animationTime * 2) * 0.008;
     }
   }
 
