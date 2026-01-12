@@ -6,14 +6,12 @@ interface Particle {
   vy: number;
   vz: number;
   life: number;
-  maxLife: number;
 }
 
 export class Fireworks {
   private group: THREE.Group;
   private particles: Particle[] = [];
   private texture: THREE.CanvasTexture;
-  private materials: Map<number, THREE.SpriteMaterial> = new Map();
 
   constructor() {
     this.group = new THREE.Group();
@@ -24,57 +22,69 @@ export class Fireworks {
     return this.group;
   }
 
+  // Texture nhỏ, sáng, mờ dần ra ngoài
   private createTexture(): THREE.CanvasTexture {
     const canvas = document.createElement("canvas");
-    canvas.width = 32;
-    canvas.height = 32;
+    canvas.width = 16;
+    canvas.height = 16;
     const ctx = canvas.getContext("2d")!;
 
-    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-    gradient.addColorStop(0, "#ffffff");
-    gradient.addColorStop(0.4, "#ffffff");
-    gradient.addColorStop(1, "transparent");
+    const gradient = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+    gradient.addColorStop(0, "rgba(255,255,255,1)");
+    gradient.addColorStop(0.1, "rgba(255,255,255,0.8)");
+    gradient.addColorStop(0.5, "rgba(255,255,255,0.3)");
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
 
     ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(16, 16, 16, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(0, 0, 16, 16);
 
     return new THREE.CanvasTexture(canvas);
   }
 
-  private getMaterial(color: number): THREE.SpriteMaterial {
-    if (!this.materials.has(color)) {
-      this.materials.set(
-        color,
-        new THREE.SpriteMaterial({
-          map: this.texture,
-          color: color,
-          transparent: true,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        })
-      );
-    }
-    return this.materials.get(color)!.clone();
+  private createMaterial(color: number): THREE.SpriteMaterial {
+    return new THREE.SpriteMaterial({
+      map: this.texture,
+      color: color,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
   }
 
   launch(startPosition: THREE.Vector3, color: number) {
-    const targetY = startPosition.y + 0.35 + Math.random() * 0.1;
+    const targetY = startPosition.y + 0.45 + Math.random() * 0.15;
 
-    // Rocket bay lên
-    const rocket = new THREE.Sprite(this.getMaterial(0xffff00));
-    rocket.scale.setScalar(0.02);
+    // Rocket nhỏ bay lên
+    const rocket = new THREE.Sprite(this.createMaterial(0xffffaa));
+    rocket.scale.setScalar(0.025);
     rocket.position.copy(startPosition);
     this.group.add(rocket);
 
     let currentY = startPosition.y;
     const flyUp = () => {
-      currentY += 0.012;
+      currentY += 0.015;
       rocket.position.y = currentY;
+
+      // Trail nhỏ
+      const trail = new THREE.Sprite(this.createMaterial(0xffaa44));
+      trail.scale.setScalar(0.015);
+      trail.position.set(
+        rocket.position.x + (Math.random() - 0.5) * 0.005,
+        rocket.position.y - 0.01,
+        rocket.position.z
+      );
+      this.group.add(trail);
+      this.particles.push({
+        sprite: trail,
+        vx: 0,
+        vy: -0.001,
+        vz: 0,
+        life: 0.3,
+      });
 
       if (currentY >= targetY) {
         this.group.remove(rocket);
+        rocket.material.dispose();
         this.explode(
           new THREE.Vector3(startPosition.x, targetY, startPosition.z),
           color
@@ -87,17 +97,21 @@ export class Fireworks {
   }
 
   private explode(position: THREE.Vector3, color: number) {
-    const numParticles = 25; // Giảm số particles
+    // Rất nhiều hạt nhỏ li ti
+    const numParticles = 150;
 
     for (let i = 0; i < numParticles; i++) {
+      // Phân bố đều trên hình cầu
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const speed = 0.006 + Math.random() * 0.004;
 
-      const sprite = new THREE.Sprite(
-        this.getMaterial(i < 3 ? 0xffffff : color)
-      );
-      sprite.scale.setScalar(i < 3 ? 0.015 : 0.01);
+      // Tốc độ có chút random để tự nhiên hơn
+      const baseSpeed = 0.015;
+      const speed = baseSpeed + Math.random() * 0.008;
+
+      const sprite = new THREE.Sprite(this.createMaterial(color));
+      // Hạt vừa phải
+      sprite.scale.setScalar(0.012 + Math.random() * 0.008);
       sprite.position.copy(position);
       this.group.add(sprite);
 
@@ -105,33 +119,60 @@ export class Fireworks {
         sprite,
         vx: Math.sin(phi) * Math.cos(theta) * speed,
         vy: Math.sin(phi) * Math.sin(theta) * speed,
-        vz: Math.cos(phi) * speed,
-        life: 1,
-        maxLife: 1,
+        vz: Math.cos(phi) * speed * 0.5,
+        life: 0.8 + Math.random() * 0.6,
+      });
+    }
+
+    // Thêm vài hạt sáng hơn ở giữa
+    for (let i = 0; i < 20; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const speed = 0.008 + Math.random() * 0.005;
+
+      const sprite = new THREE.Sprite(this.createMaterial(0xffffff));
+      sprite.scale.setScalar(0.018);
+      sprite.position.copy(position);
+      this.group.add(sprite);
+
+      this.particles.push({
+        sprite,
+        vx: Math.sin(phi) * Math.cos(theta) * speed,
+        vy: Math.sin(phi) * Math.sin(theta) * speed,
+        vz: Math.cos(phi) * speed * 0.5,
+        life: 0.5 + Math.random() * 0.3,
       });
     }
   }
 
   launchSequence(centerPosition: THREE.Vector3) {
-    const colors = [0xff0000, 0xffd700, 0x00ff00, 0x00ffff, 0xff00ff];
+    const colors = [0xff3333, 0xffdd33, 0x33ff66, 0x33ddff, 0xff33ff, 0xff8833];
 
-    [0, 700, 1400, 2100, 2800].forEach((delay, i) => {
+    const launches = [
+      { x: 0, delay: 0 },
+      { x: -0.18, delay: 400 },
+      { x: 0.18, delay: 800 },
+      { x: -0.08, delay: 1200 },
+      { x: 0.08, delay: 1600 },
+      { x: 0, delay: 2000 },
+    ];
+
+    launches.forEach(({ x, delay }, i) => {
       setTimeout(() => {
-        const x = (i % 2 === 0 ? 1 : -1) * (i * 0.05);
         this.launch(
           new THREE.Vector3(
             centerPosition.x + x,
-            centerPosition.y - 0.3,
+            centerPosition.y - 0.35,
             centerPosition.z
           ),
-          colors[i]
+          colors[i % colors.length]
         );
       }, delay);
     });
   }
 
   update() {
-    const gravity = 0.0002;
+    const gravity = 0.0005;
 
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
@@ -139,11 +180,24 @@ export class Fireworks {
       p.sprite.position.x += p.vx;
       p.sprite.position.y += p.vy;
       p.sprite.position.z += p.vz;
+
+      // Gravity kéo xuống
       p.vy -= gravity;
 
-      p.life -= 0.015;
-      (p.sprite.material as THREE.SpriteMaterial).opacity = Math.max(0, p.life);
-      p.sprite.scale.multiplyScalar(0.99);
+      // Drag - chậm dần
+      p.vx *= 0.98;
+      p.vy *= 0.98;
+      p.vz *= 0.98;
+
+      p.life -= 0.018;
+
+      // Fade out
+      const alpha = Math.max(0, p.life);
+      (p.sprite.material as THREE.SpriteMaterial).opacity = alpha;
+
+      // Thu nhỏ dần
+      const currentScale = p.sprite.scale.x;
+      p.sprite.scale.setScalar(currentScale * 0.995);
 
       if (p.life <= 0) {
         this.group.remove(p.sprite);
@@ -160,6 +214,5 @@ export class Fireworks {
     });
     this.particles = [];
     this.texture.dispose();
-    this.materials.forEach((m) => m.dispose());
   }
 }
