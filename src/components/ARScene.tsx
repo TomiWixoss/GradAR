@@ -49,6 +49,11 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     // === EFFECTS ===
     const centerPosition = new THREE.Vector3(0, 0, 0);
 
+    // Audio celebration
+    const audio = new Audio("/audio/celebration.mp3");
+    audio.loop = true;
+    audio.volume = 0.5;
+
     // 1. Text chúc mừng
     const congratText = new CongratulationText();
     congratText.create();
@@ -118,12 +123,19 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
 
     anchor.onTargetFound = () => {
       console.log("Target found!");
+      // Phát nhạc khi thấy target
+      audio.play().catch(() => {});
+
       if (!hasLaunchedEffects) {
         hasLaunchedEffects = true;
         fireworks.launchSequence(centerPosition);
-        // Ném mũ sau 1 giây
         setTimeout(() => graduationCap.throwCap(), 1000);
       }
+    };
+
+    anchor.onTargetLost = () => {
+      // Tạm dừng nhạc khi mất target
+      audio.pause();
     };
 
     // Animation
@@ -142,6 +154,8 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
 
     return () => {
       renderer.setAnimationLoop(null);
+      audio.pause();
+      audio.src = "";
       containerRef.current?.removeEventListener("touchstart", onTap);
       containerRef.current?.removeEventListener("click", onTap);
       congratText.dispose();
