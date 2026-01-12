@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { MindARThree } from "mind-ar/dist/mindar-image-three.prod.js";
+import { Fireworks, CongratulationText } from "./effects";
 
 interface ARSceneProps {
   targetSrc: string;
@@ -30,41 +31,36 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const anchor = mindar.addAnchor(0);
 
     // Lighting
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-    scene.add(light);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
 
-    // Text plane - "Chúc mừng Tân Cử nhân"
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 128;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#FFD700";
-    ctx.fillRect(0, 0, 512, 128);
-    ctx.fillStyle = "#8B0000";
-    ctx.font = "bold 36px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("Chúc mừng Tân Cử nhân", 256, 75);
+    // === EFFECTS ===
+    const centerPosition = new THREE.Vector3(0, 0, 0);
 
-    const textTexture = new THREE.CanvasTexture(canvas);
-    const textGeometry = new THREE.PlaneGeometry(1, 0.25);
-    const textMaterial = new THREE.MeshBasicMaterial({
-      map: textTexture,
-      transparent: true,
-    });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.set(0, 0.5, 0);
-    anchor.group.add(textMesh);
+    // 1. Text chúc mừng
+    const congratText = new CongratulationText();
+    congratText.create("Chúc mừng Tân Cử nhân!");
+    anchor.group.add(congratText.getGroup());
 
-    // Placeholder cube (thay bằng 3D model sau)
-    const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(0, 0, 0.1);
-    anchor.group.add(cube);
+    // 2. Pháo hoa (three-nebula)
+    const fireworks = new Fireworks();
+    anchor.group.add(fireworks.getGroup());
 
-    // Animation loop
+    // Track target detection
+    let hasLaunchedEffects = false;
+
+    anchor.onTargetFound = () => {
+      console.log("Target found!");
+      if (!hasLaunchedEffects) {
+        hasLaunchedEffects = true;
+        fireworks.launchSequence(centerPosition);
+      }
+    };
+
+    // Animation
     const animate = () => {
-      cube.rotation.y += 0.02;
+      congratText.update(0.016);
+      fireworks.update();
       renderer.render(scene, camera);
     };
 
@@ -76,6 +72,8 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
 
     return () => {
       renderer.setAnimationLoop(null);
+      congratText.dispose();
+      fireworks.dispose();
       if (mindarRef.current) {
         try {
           mindarRef.current.stop();
