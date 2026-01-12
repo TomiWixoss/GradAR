@@ -1,35 +1,28 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import ARScene from "./components/ARScene";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [started, setStarted] = useState(false);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+  // Bạn cần tạo file .mind từ ảnh target
+  // Dùng tool: https://hiukim.github.io/mind-ar-js-doc/tools/compile
+  const targetSrc = "/targets/diploma.mind";
+
+  if (!started) {
+    return (
+      <div className="start-screen">
+        <h1>GradAR</h1>
+        <p>Chúc mừng Tốt nghiệp!</p>
+        <button onClick={() => setStarted(true)}>Bắt đầu AR</button>
+        <p className="hint">
+          Chĩa camera vào tấm bằng tốt nghiệp để xem hiệu ứng AR
         </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    );
+  }
+
+  return <ARScene targetSrc={targetSrc} />;
 }
 
-export default App
+export default App;
