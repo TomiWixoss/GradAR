@@ -12,6 +12,11 @@ declare module "mind-ar/dist/mindar-image-three.prod.js" {
     uiLoading?: string;
     uiScanning?: string;
     uiError?: string;
+    videoSettings?: {
+      width?: { ideal?: number; min?: number; max?: number } | number;
+      height?: { ideal?: number; min?: number; max?: number } | number;
+      facingMode?: string;
+    };
   }
 
   interface Anchor {

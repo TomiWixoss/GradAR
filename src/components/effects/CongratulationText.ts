@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 export class CongratulationText {
   private group: THREE.Group;
-  private textMesh: THREE.Mesh | null = null;
+  private bannerMesh: THREE.Mesh | null = null;
   private animationTime = 0;
 
   constructor() {
@@ -13,72 +13,102 @@ export class CongratulationText {
     return this.group;
   }
 
-  create(text: string = "Chúc mừng Tân Cử nhân!") {
+  create() {
+    const logoImg = new Image();
+    logoImg.crossOrigin = "anonymous";
+    logoImg.onload = () => {
+      this.createBanner(logoImg);
+    };
+    logoImg.src = "/logotvu.png";
+  }
+
+  private createBanner(logoImg: HTMLImageElement) {
     const canvas = document.createElement("canvas");
-    canvas.width = 1024;
-    canvas.height = 256;
+    canvas.width = 700;
+    canvas.height = 180;
     const ctx = canvas.getContext("2d")!;
 
-    // Gradient background
-    const gradient = ctx.createLinearGradient(0, 0, 1024, 0);
-    gradient.addColorStop(0, "#8B0000");
-    gradient.addColorStop(0.5, "#FF0000");
-    gradient.addColorStop(1, "#8B0000");
+    // Background đỏ đậm
+    ctx.fillStyle = "#5A0000";
+    ctx.fillRect(0, 0, 700, 180);
 
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 1024, 256);
+    // Viền vàng
+    ctx.strokeStyle = "#C9A227";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(8, 8, 684, 164);
 
-    // Border
-    ctx.strokeStyle = "#FFD700";
-    ctx.lineWidth = 8;
-    ctx.strokeRect(10, 10, 1004, 236);
+    // Logo bên trái
+    const logoSize = 65;
+    const logoX = 25;
+    const logoY = (180 - logoSize) / 2;
+    ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-    // Text shadow
-    ctx.shadowColor = "#000";
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
+    // Text area
+    const textCenterX = 400;
 
-    // Main text
-    ctx.fillStyle = "#FFD700";
-    ctx.font = "bold 64px Arial, sans-serif";
+    // Tên trường
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 512, 128);
+    ctx.fillStyle = "#C9A227";
+    ctx.font = "600 18px 'Times New Roman', serif";
+    ctx.fillText("TRƯỜNG ĐẠI HỌC TRÀ VINH", textCenterX, 42);
+
+    // Đường kẻ
+    ctx.strokeStyle = "#C9A227";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(150, 55);
+    ctx.lineTo(650, 55);
+    ctx.stroke();
+
+    // Chúc mừng tốt nghiệp
+    ctx.fillStyle = "#F0D060";
+    ctx.font = "bold 32px 'Times New Roman', serif";
+    ctx.fillText("CHÚC MỪNG TỐT NGHIỆP", textCenterX, 100);
+
+    // Đường kẻ dưới
+    ctx.beginPath();
+    ctx.moveTo(150, 115);
+    ctx.lineTo(650, 115);
+    ctx.stroke();
+
+    // Lời chúc
+    ctx.fillStyle = "#E0D0B0";
+    ctx.font = "italic 16px 'Times New Roman', serif";
+    ctx.fillText(
+      "Chúc bạn thành công trên hành trình phía trước",
+      textCenterX,
+      150
+    );
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
 
-    const geometry = new THREE.PlaneGeometry(1.2, 0.3);
+    const geometry = new THREE.PlaneGeometry(0.95, 0.24);
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
       side: THREE.DoubleSide,
     });
 
-    this.textMesh = new THREE.Mesh(geometry, material);
-    this.textMesh.position.set(0, 0.55, 0.05);
-    this.group.add(this.textMesh);
+    this.bannerMesh = new THREE.Mesh(geometry, material);
+    this.bannerMesh.position.set(0, 0.45, 0.05);
+    this.group.add(this.bannerMesh);
   }
 
   update(deltaTime: number) {
-    if (!this.textMesh) return;
-
     this.animationTime += deltaTime;
 
-    // Floating animation
-    this.textMesh.position.y = 0.55 + Math.sin(this.animationTime * 2) * 0.02;
-
-    // Subtle scale pulse
-    const scale = 1 + Math.sin(this.animationTime * 3) * 0.03;
-    this.textMesh.scale.setScalar(scale);
+    if (this.bannerMesh) {
+      this.bannerMesh.position.y =
+        0.45 + Math.sin(this.animationTime * 1.5) * 0.006;
+    }
   }
 
   dispose() {
-    if (this.textMesh) {
-      this.group.remove(this.textMesh);
-      this.textMesh.geometry.dispose();
-      (this.textMesh.material as THREE.MeshBasicMaterial).dispose();
+    if (this.bannerMesh) {
+      this.group.remove(this.bannerMesh);
+      this.bannerMesh.geometry.dispose();
+      (this.bannerMesh.material as THREE.MeshBasicMaterial).dispose();
     }
   }
 }
