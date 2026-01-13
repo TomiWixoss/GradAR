@@ -4,6 +4,7 @@ export class CongratulationText {
   private group: THREE.Group;
   private bannerMesh: THREE.Mesh | null = null;
   private animationTime = 0;
+  private basePosition = new THREE.Vector3();
 
   constructor() {
     this.group = new THREE.Group();
@@ -11,6 +12,13 @@ export class CongratulationText {
 
   getGroup(): THREE.Group {
     return this.group;
+  }
+
+  setPosition(pos: THREE.Vector3) {
+    this.basePosition.copy(pos);
+    if (this.bannerMesh) {
+      this.bannerMesh.position.copy(pos);
+    }
   }
 
   create() {
@@ -91,7 +99,11 @@ export class CongratulationText {
     });
 
     this.bannerMesh = new THREE.Mesh(geometry, material);
-    this.bannerMesh.position.set(0, 0.45, 0.05);
+
+    // Xoay banner để nghiêng về phía camera nhiều hơn
+    this.bannerMesh.rotation.x = Math.PI / 3; // Nghiêng khoảng 60 độ
+
+    this.bannerMesh.position.copy(this.basePosition);
     this.group.add(this.bannerMesh);
   }
 
@@ -99,8 +111,9 @@ export class CongratulationText {
     this.animationTime += deltaTime;
 
     if (this.bannerMesh) {
-      this.bannerMesh.position.y =
-        0.45 + Math.sin(this.animationTime * 1.5) * 0.006;
+      // Lơ lửng nhẹ trên đầu nhân vật (theo trục Z)
+      this.bannerMesh.position.z =
+        this.basePosition.z + Math.sin(this.animationTime * 1.5) * 0.02;
     }
   }
 

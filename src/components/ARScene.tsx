@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { MindARThree } from "mind-ar/dist/mindar-image-three.prod.js";
-import { Fireworks, CongratulationText, ChibiCharacter } from "./effects";
+import { CongratulationText, ChibiCharacter } from "./effects";
 
 interface ARSceneProps {
   targetSrc: string;
@@ -17,20 +17,15 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const mindar = new MindARThree({
       container: containerRef.current,
       imageTargetSrc: targetSrc,
-      filterMinCF: 0.0001,
-      filterBeta: 0.001,
-      warmupTolerance: 3,
-      missTolerance: 10,
+      // Giảm rung, mượt hơn
+      filterMinCF: 0.001, // Tăng lên để ổn định hơn
+      filterBeta: 0.01, // Tăng lên để phản hồi nhanh hơn khi di chuyển
+      warmupTolerance: 5, // Cho phép nhiều frame warmup hơn
+      missTolerance: 5, // Giữ tracking lâu hơn khi mất target tạm thời
       uiLoading: "no",
       uiScanning: "no",
       uiError: "no",
-      // Camera chất lượng cao nhất
       maxTrack: 1,
-      videoSettings: {
-        width: { ideal: 2560, min: 1920 },
-        height: { ideal: 1440, min: 1080 },
-        facingMode: "environment",
-      },
     });
     mindarRef.current = mindar;
 
@@ -43,8 +38,13 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const anchor = mindar.addAnchor(0);
 
     // Lighting vừa phải
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
+
+    // Thêm directional light để nhân vật sáng hơn
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    directionalLight.position.set(0, 1, 2);
+    scene.add(directionalLight);
 
     // === EFFECTS ===
     const centerPosition = new THREE.Vector3(0, 0, 0);
@@ -59,77 +59,15 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     congratText.create();
     anchor.group.add(congratText.getGroup());
 
-    // 2. Pháo hoa
-    const fireworks = new Fireworks();
-    anchor.group.add(fireworks.getGroup());
-
-    // 3. Nhân vật Chibi 3D nhảy nhót
+    // 2. Nhân vật 3D nhảy nhót
     const chibiCharacter = new ChibiCharacter();
     chibiCharacter.load(centerPosition);
     anchor.group.add(chibiCharacter.getGroup());
-
-    // Raycaster để detect touch trên banner
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
-
-    const onTap = (event: TouchEvent | MouseEvent) => {
-      event.preventDefault();
-
-      const rect = containerRef.current!.getBoundingClientRect();
-      let clientX: number, clientY: number;
-
-      if ("touches" in event) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-      } else {
-        clientX = event.clientX;
-        clientY = event.clientY;
-      }
-
-      pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-      pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(pointer, camera);
-
-      // Check tap vào nhân vật
-      const chibiIntersects = raycaster.intersectObjects(
-        chibiCharacter.getGroup().children,
-        true
-      );
-
-      if (chibiIntersects.length > 0) {
-        // Chạm vào nhân vật -> bắn pháo hoa
-        fireworks.launchSequence(centerPosition);
-        return;
-      }
-
-      // Check tap vào banner
-      const bannerIntersects = raycaster.intersectObjects(
-        congratText.getGroup().children,
-        true
-      );
-
-      if (bannerIntersects.length > 0) {
-        // Chạm vào banner -> bắn pháo hoa
-        fireworks.launchSequence(centerPosition);
-      }
-    };
-
-    containerRef.current.addEventListener("touchstart", onTap);
-    containerRef.current.addEventListener("click", onTap);
-
-    // Track target detection
-    let hasLaunchedEffects = false;
 
     anchor.onTargetFound = () => {
       console.log("Target found!");
       // Phát nhạc khi thấy target
       audio.play().catch(() => {});
-
-      if (!hasLaunchedEffects) {
-        hasLaunchedEffects = true;
-        fireworks.launchSequence(centerPosition);
-      }
     };
 
     anchor.onTargetLost = () => {
@@ -138,9 +76,19 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     };
 
     // Animation
+    let bannerInitialized = false;
+
     const animate = () => {
+      // Cập nhật vị trí banner theo đầu nhân vật
+      if (!bannerInitialized) {
+        const headPos = chibiCharacter.getHeadPosition();
+        if (headPos) {
+          congratText.setPosition(headPos);
+          bannerInitialized = true;
+        }
+      }
+
       congratText.update(0.016);
-      fireworks.update();
       chibiCharacter.update(0.016);
       renderer.render(scene, camera);
     };
@@ -155,10 +103,7 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
       renderer.setAnimationLoop(null);
       audio.pause();
       audio.src = "";
-      containerRef.current?.removeEventListener("touchstart", onTap);
-      containerRef.current?.removeEventListener("click", onTap);
       congratText.dispose();
-      fireworks.dispose();
       chibiCharacter.dispose();
       if (mindarRef.current) {
         try {

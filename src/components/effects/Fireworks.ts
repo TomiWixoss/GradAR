@@ -52,41 +52,41 @@ export class Fireworks {
   }
 
   launch(startPosition: THREE.Vector3, color: number) {
-    const targetY = startPosition.y + 0.45 + Math.random() * 0.15;
+    const targetZ = startPosition.z + 0.45 + Math.random() * 0.15;
 
-    // Rocket nhỏ bay lên
+    // Rocket nhỏ bay lên (theo trục Z = vuông góc với ảnh)
     const rocket = new THREE.Sprite(this.createMaterial(0xffffaa));
     rocket.scale.setScalar(0.025);
     rocket.position.copy(startPosition);
     this.group.add(rocket);
 
-    let currentY = startPosition.y;
+    let currentZ = startPosition.z;
     const flyUp = () => {
-      currentY += 0.015;
-      rocket.position.y = currentY;
+      currentZ += 0.015;
+      rocket.position.z = currentZ;
 
       // Trail nhỏ
       const trail = new THREE.Sprite(this.createMaterial(0xffaa44));
       trail.scale.setScalar(0.015);
       trail.position.set(
         rocket.position.x + (Math.random() - 0.5) * 0.005,
-        rocket.position.y - 0.01,
-        rocket.position.z
+        rocket.position.y,
+        rocket.position.z - 0.01
       );
       this.group.add(trail);
       this.particles.push({
         sprite: trail,
         vx: 0,
-        vy: -0.001,
-        vz: 0,
+        vy: 0,
+        vz: -0.001,
         life: 0.3,
       });
 
-      if (currentY >= targetY) {
+      if (currentZ >= targetZ) {
         this.group.remove(rocket);
         rocket.material.dispose();
         this.explode(
-          new THREE.Vector3(startPosition.x, targetY, startPosition.z),
+          new THREE.Vector3(startPosition.x, startPosition.y, targetZ),
           color
         );
       } else {
@@ -148,22 +148,23 @@ export class Fireworks {
   launchSequence(centerPosition: THREE.Vector3) {
     const colors = [0xff3333, 0xffdd33, 0x33ff66, 0x33ddff, 0xff33ff, 0xff8833];
 
+    // Bắn từ dưới ảnh (y âm = phía dưới)
     const launches = [
-      { x: 0, delay: 0 },
-      { x: -0.18, delay: 400 },
-      { x: 0.18, delay: 800 },
-      { x: -0.08, delay: 1200 },
-      { x: 0.08, delay: 1600 },
-      { x: 0, delay: 2000 },
+      { x: 0, y: -0.4, delay: 0 },
+      { x: -0.18, y: -0.45, delay: 400 },
+      { x: 0.18, y: -0.45, delay: 800 },
+      { x: -0.08, y: -0.42, delay: 1200 },
+      { x: 0.08, y: -0.42, delay: 1600 },
+      { x: 0, y: -0.4, delay: 2000 },
     ];
 
-    launches.forEach(({ x, delay }, i) => {
+    launches.forEach(({ x, y, delay }, i) => {
       setTimeout(() => {
         this.launch(
           new THREE.Vector3(
             centerPosition.x + x,
-            centerPosition.y - 0.35,
-            centerPosition.z
+            centerPosition.y + y,
+            0.01 // Bắt đầu từ mặt ảnh
           ),
           colors[i % colors.length]
         );
@@ -181,8 +182,8 @@ export class Fireworks {
       p.sprite.position.y += p.vy;
       p.sprite.position.z += p.vz;
 
-      // Gravity kéo xuống
-      p.vy -= gravity;
+      // Gravity kéo xuống (theo trục Z)
+      p.vz -= gravity;
 
       // Drag - chậm dần
       p.vx *= 0.98;

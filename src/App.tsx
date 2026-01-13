@@ -7,7 +7,7 @@ function App() {
 
   // Bạn cần tạo file .mind từ ảnh target
   // Dùng tool: https://hiukim.github.io/mind-ar-js-doc/tools/compile
-  const targetSrc = "/targets/diploma.mind";
+  const targetSrc = "/targets/targets.mind";
 
   if (!started) {
     return (
