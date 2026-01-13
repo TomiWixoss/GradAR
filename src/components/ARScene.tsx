@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { MindARThree } from "mind-ar/dist/mindar-image-three.prod.js";
-import { Fireworks, CongratulationText, GraduationCap } from "./effects";
+import { Fireworks, CongratulationText, AnimatedBook } from "./effects";
 
 interface ARSceneProps {
   targetSrc: string;
@@ -63,10 +63,10 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const fireworks = new Fireworks();
     anchor.group.add(fireworks.getGroup());
 
-    // 3. Mũ cử nhân 3D
-    const graduationCap = new GraduationCap();
-    graduationCap.load(centerPosition);
-    anchor.group.add(graduationCap.getGroup());
+    // 3. Sách 3D có animation
+    const animatedBook = new AnimatedBook();
+    animatedBook.load(centerPosition);
+    anchor.group.add(animatedBook.getGroup());
 
     // Raycaster để detect touch trên banner
     const raycaster = new THREE.Raycaster();
@@ -91,15 +91,15 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
 
       raycaster.setFromCamera(pointer, camera);
 
-      // Check tap vào mũ
-      const capIntersects = raycaster.intersectObjects(
-        graduationCap.getGroup().children,
+      // Check tap vào sách
+      const bookIntersects = raycaster.intersectObjects(
+        animatedBook.getGroup().children,
         true
       );
 
-      if (capIntersects.length > 0) {
-        // Chạm vào mũ -> ném mũ
-        graduationCap.throwCap();
+      if (bookIntersects.length > 0) {
+        // Chạm vào sách -> bắn pháo hoa
+        fireworks.launchSequence(centerPosition);
         return;
       }
 
@@ -129,7 +129,6 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
       if (!hasLaunchedEffects) {
         hasLaunchedEffects = true;
         fireworks.launchSequence(centerPosition);
-        setTimeout(() => graduationCap.throwCap(), 1000);
       }
     };
 
@@ -142,7 +141,7 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const animate = () => {
       congratText.update(0.016);
       fireworks.update();
-      graduationCap.update(0.016);
+      animatedBook.update(0.016);
       renderer.render(scene, camera);
     };
 
@@ -160,7 +159,7 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
       containerRef.current?.removeEventListener("click", onTap);
       congratText.dispose();
       fireworks.dispose();
-      graduationCap.dispose();
+      animatedBook.dispose();
       if (mindarRef.current) {
         try {
           mindarRef.current.stop();
