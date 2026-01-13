@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { MindARThree } from "mind-ar/dist/mindar-image-three.prod.js";
-import { Fireworks, CongratulationText, AnimatedBook } from "./effects";
+import { Fireworks, CongratulationText, ChibiCharacter } from "./effects";
 
 interface ARSceneProps {
   targetSrc: string;
@@ -63,10 +63,10 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const fireworks = new Fireworks();
     anchor.group.add(fireworks.getGroup());
 
-    // 3. Sách 3D có animation
-    const animatedBook = new AnimatedBook();
-    animatedBook.load(centerPosition);
-    anchor.group.add(animatedBook.getGroup());
+    // 3. Nhân vật Chibi 3D nhảy nhót
+    const chibiCharacter = new ChibiCharacter();
+    chibiCharacter.load(centerPosition);
+    anchor.group.add(chibiCharacter.getGroup());
 
     // Raycaster để detect touch trên banner
     const raycaster = new THREE.Raycaster();
@@ -91,14 +91,14 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
 
       raycaster.setFromCamera(pointer, camera);
 
-      // Check tap vào sách
-      const bookIntersects = raycaster.intersectObjects(
-        animatedBook.getGroup().children,
+      // Check tap vào nhân vật
+      const chibiIntersects = raycaster.intersectObjects(
+        chibiCharacter.getGroup().children,
         true
       );
 
-      if (bookIntersects.length > 0) {
-        // Chạm vào sách -> bắn pháo hoa
+      if (chibiIntersects.length > 0) {
+        // Chạm vào nhân vật -> bắn pháo hoa
         fireworks.launchSequence(centerPosition);
         return;
       }
@@ -141,7 +141,7 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const animate = () => {
       congratText.update(0.016);
       fireworks.update();
-      animatedBook.update(0.016);
+      chibiCharacter.update(0.016);
       renderer.render(scene, camera);
     };
 
@@ -159,7 +159,7 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
       containerRef.current?.removeEventListener("click", onTap);
       congratText.dispose();
       fireworks.dispose();
-      animatedBook.dispose();
+      chibiCharacter.dispose();
       if (mindarRef.current) {
         try {
           mindarRef.current.stop();
