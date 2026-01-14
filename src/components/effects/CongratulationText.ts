@@ -27,7 +27,7 @@ export class CongratulationText {
     logoImg.onload = () => {
       this.createBanner(logoImg);
     };
-    logoImg.src = "/logotvu.png";
+    logoImg.src = `${import.meta.env.BASE_URL}logotvu.png`;
   }
 
   private createBanner(logoImg: HTMLImageElement) {

@@ -28,7 +28,7 @@ export class ChibiCharacter {
     return new Promise((resolve, reject) => {
       const loader = new FBXLoader();
       loader.load(
-        "/models/dancing_character.fbx",
+        `${import.meta.env.BASE_URL}models/dancing_character.fbx`,
         (fbx) => {
           this.character = fbx;
           // FBX từ Mixamo thường rất to, scale nhỏ lại

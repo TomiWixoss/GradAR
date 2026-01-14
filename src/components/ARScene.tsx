@@ -50,7 +50,7 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
     const centerPosition = new THREE.Vector3(0, 0, 0);
 
     // Audio celebration
-    const audio = new Audio("/audio/celebration.mp3");
+    const audio = new Audio(`${import.meta.env.BASE_URL}audio/celebration.mp3`);
     audio.loop = true;
     audio.volume = 0.5;
 

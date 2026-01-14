@@ -5,9 +5,8 @@ import "./App.css";
 function App() {
   const [started, setStarted] = useState(false);
 
-  // Bạn cần tạo file .mind từ ảnh target
-  // Dùng tool: https://hiukim.github.io/mind-ar-js-doc/tools/compile
-  const targetSrc = "/targets/targets.mind";
+  // Dùng base URL từ vite config
+  const targetSrc = `${import.meta.env.BASE_URL}targets/targets.mind`;
 
   if (!started) {
     return (
