@@ -182,18 +182,18 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
                   <span style={{ fontWeight: "500" }}>
                     {expanded ? "Hướng dẫn quét AR" : "Quét tấm bằng"}
                   </span>
-                  <motion.svg 
-                    width="16" 
-                    height="16" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2"
-                    animate={{ rotate: expanded ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <polyline points="6 9 12 15 18 9"/>
-                  </motion.svg>
+                  {/* Status dot */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: "16px",
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: isLoading ? "#ef5350" : "#66bb6a",
+                      boxShadow: isLoading ? "0 0 6px #ef5350" : "0 0 6px #66bb6a",
+                    }}
+                  />
                 </div>
                 <AnimatePresence>
                   {expanded && (
@@ -234,37 +234,7 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
             </motion.div>
         )}
       </AnimatePresence>
-      {isLoading && (
-        <div
-          className="gradient-border-tooltip"
-          style={{
-            position: "fixed",
-            top: "20px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            color: "white",
-            fontSize: "12px",
-            zIndex: 999,
-            padding: "8px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, ease: "linear", repeat: Infinity }}
-            style={{
-              width: "16px",
-              height: "16px",
-              border: "2px solid rgba(255,255,255,0.3)",
-              borderTop: "2px solid white",
-              borderRadius: "50%",
-            }}
-          />
-          <span>Đang tải 3D...</span>
-        </div>
-      )}
+
     </>
   );
 }
