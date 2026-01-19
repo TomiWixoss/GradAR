@@ -3,7 +3,7 @@ import ARScene from "./components/ARScene";
 import "./App.css";
 
 function App() {
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(true);
 
   // Dùng base URL từ vite config
   const targetSrc = `${import.meta.env.BASE_URL}targets/targets.mind`;
