@@ -69,7 +69,7 @@ body {
   inset: 0;
   border-radius: 24px;
   padding: 3px;
-  background: conic-gradient(from var(--angle, 0deg), #4285f4, #ea4335, #fbbc04, #34a853, #4285f4);
+  background: conic-gradient(from var(--angle, 0deg), #ef5350, #ff7043, #ffca28, #66bb6a, #42a5f5, #5c6bc0, #ab47bc, #ef5350);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
