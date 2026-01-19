@@ -58,7 +58,7 @@ export class CongratulationText {
     ctx.textAlign = "center";
     ctx.fillStyle = "#C9A227";
     ctx.font = "600 18px 'Times New Roman', serif";
-    ctx.fillText("TRƯỜNG ĐẠI HỌC TRÀ VINH", textCenterX, 42);
+    ctx.fillText("ĐẠI HỌC TRÀ VINH", textCenterX, 42);
 
     // Đường kẻ
     ctx.strokeStyle = "#C9A227";
