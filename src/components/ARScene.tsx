@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { MindARThree } from "mind-ar/dist/mindar-image-three.prod.js";
 import { CongratulationText, ChibiCharacter } from "./effects";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ARSceneProps {
   targetSrc: string;
@@ -10,6 +11,9 @@ interface ARSceneProps {
 export default function ARScene({ targetSrc }: ARSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mindarRef = useRef<MindARThree | null>(null);
+  const [targetFound, setTargetFound] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -61,16 +65,20 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
 
     // 2. Nhân vật 3D nhảy nhót
     const chibiCharacter = new ChibiCharacter();
-    chibiCharacter.load(centerPosition);
+    chibiCharacter.load(centerPosition).then(() => {
+      setIsLoading(false);
+    });
     anchor.group.add(chibiCharacter.getGroup());
 
     anchor.onTargetFound = () => {
       console.log("Target found!");
+      setTargetFound(true);
       // Phát nhạc khi thấy target
       audio.play().catch(() => {});
     };
 
     anchor.onTargetLost = () => {
+      setTargetFound(false);
       // Tạm dừng nhạc khi mất target
       audio.pause();
     };
@@ -116,16 +124,147 @@ export default function ARScene({ targetSrc }: ARSceneProps) {
   }, [targetSrc]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        overflow: "hidden",
-      }}
-    />
+    <>
+      <div
+        ref={containerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          overflow: "hidden",
+        }}
+      />
+      <AnimatePresence>
+        {!targetFound && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0
+            }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ 
+              opacity: { duration: 0.3 },
+              y: { duration: 0.3 }
+            }}
+            onClick={() => setExpanded(!expanded)}
+            style={{
+              position: "fixed",
+              bottom: "20px",
+              left: "50%",
+              x: "-50%",
+              borderRadius: "24px",
+              fontSize: "12px",
+              zIndex: 1000,
+              textAlign: "center",
+              cursor: "pointer",
+            }}
+          >
+            <motion.div
+              className="gradient-border-tooltip"
+              animate={{
+                padding: expanded ? "12px 20px" : "8px 24px",
+                width: expanded ? "300px" : "180px",
+              }}
+              transition={{ 
+                width: { duration: 0.3, ease: "easeInOut" },
+                padding: { duration: 0.3, ease: "easeInOut" }
+              }}
+            >
+              {/* Content */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  <span style={{ fontWeight: "500" }}>
+                    {expanded ? "Hướng dẫn quét AR" : "Quét tấm bằng"}
+                  </span>
+                  <motion.svg 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    animate={{ rotate: expanded ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <polyline points="6 9 12 15 18 9"/>
+                  </motion.svg>
+                </div>
+                <AnimatePresence>
+                  {expanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ 
+                        height: { duration: 0.3, ease: "easeInOut", delay: 0.3 },
+                        opacity: { duration: 0.2, delay: 0.5 }
+                      }}
+                      style={{ 
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div style={{ 
+                        marginTop: "12px", 
+                        paddingTop: "12px", 
+                        borderTop: "2px solid rgba(255,255,255,0.5)",
+                        fontSize: "13px",
+                        lineHeight: "1.6",
+                        color: "rgba(255, 255, 255, 0.85)"
+                      }}>
+                        <p style={{ margin: "0 0 8px 0" }}>
+                          • Hướng camera vào tấm bằng tốt nghiệp
+                        </p>
+                        <p style={{ margin: "0 0 8px 0" }}>
+                          • Giữ camera ổn định và đủ ánh sáng
+                        </p>
+                        <p style={{ margin: "0" }}>
+                          • Hiệu ứng AR sẽ xuất hiện tự động
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </motion.div>
+        )}
+      </AnimatePresence>
+      {isLoading && (
+        <div
+          className="gradient-border-tooltip"
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            color: "white",
+            fontSize: "12px",
+            zIndex: 999,
+            padding: "8px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, ease: "linear", repeat: Infinity }}
+            style={{
+              width: "16px",
+              height: "16px",
+              border: "2px solid rgba(255,255,255,0.3)",
+              borderTop: "2px solid white",
+              borderRadius: "50%",
+            }}
+          />
+          <span>Đang tải 3D...</span>
+        </div>
+      )}
+    </>
   );
 }

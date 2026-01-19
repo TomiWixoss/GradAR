@@ -54,3 +54,40 @@ body {
   opacity: 0.7;
   margin-top: 30px;
 }
+
+/* Gradient border tooltip */
+.gradient-border-tooltip {
+  position: relative;
+  background: transparent;
+  border-radius: 24px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.gradient-border-tooltip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  padding: 3px;
+  background: conic-gradient(from var(--angle, 0deg), #4285f4, #ea4335, #fbbc04, #34a853, #4285f4);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: rotate-gradient 3s linear infinite;
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotate-gradient {
+  from {
+    --angle: 0deg;
+  }
+  to {
+    --angle: 360deg;
+  }
+}
